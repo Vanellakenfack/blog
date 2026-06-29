@@ -10,12 +10,28 @@ app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(compression());
 app.use(morgan("dev"));
 
+// On récupère l'URL du frontend depuis les variables d'environnement, avec les localhost par défaut
+const allowedOrigins = [
+    "http://localhost:5173", 
+    "http://localhost:5174",
+    process.env.FRONTEND_URL // Cette variable contiendra l'URL de votre site React en ligne
+];
+
 app.use(cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: function (origin, callback) {
+        // Autorise les requêtes sans origine (comme Postman ou les outils de test) 
+        // ou si l'origine est dans notre liste autorisée
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error("Bloqué par les restrictions CORS"));
+        }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }));
+
 
 app.use(express.json());
 
